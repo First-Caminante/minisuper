@@ -37,6 +37,6 @@ app.route('/proveedores', proveedoresApp);
 app.route('/auth', authApp);
 
 export const ALL: APIRoute = (context) => {
-  const env = context.locals.runtime?.env || process.env;
+  const env = context.locals.cloudflare?.env || process.env;
   return app.fetch(context.request, env);
 };
