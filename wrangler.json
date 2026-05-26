@@ -5,5 +5,9 @@
   "main": "dist/server/entry.mjs",
   "assets": {
     "directory": "dist/client"
+  },
+  "vars": {
+    "PUBLIC_SUPABASE_URL": "https://nfwrjmcnkeymybngqlah.supabase.co",
+    "PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_4eEtuTT3sSX8YzeHMaPR0A_8KgcTcqE"
   }
 }
