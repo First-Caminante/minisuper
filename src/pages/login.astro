@@ -161,14 +161,18 @@ if (Astro.locals.user) {
           window.location.href = '/';
           
         } catch (error) {
-          Swal.fire({
-            title: 'Acceso Denegado',
-            text: error.message,
-            icon: 'error',
-            background: '#1e1f22',
-            color: '#fff',
-            confirmButtonColor: '#4f46e5'
-          });
+          if (window.Swal) {
+            Swal.fire({
+              title: 'Acceso Denegado',
+              text: error.message,
+              icon: 'error',
+              background: '#1e1f22',
+              color: '#fff',
+              confirmButtonColor: '#4f46e5'
+            });
+          } else {
+            alert('Acceso Denegado: ' + error.message);
+          }
           btnSubmit.disabled = false;
           btnSubmit.innerHTML = originalText;
         }

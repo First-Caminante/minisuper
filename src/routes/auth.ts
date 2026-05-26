@@ -35,6 +35,30 @@ const loginHandler = async (c: any) => {
       return c.json({ success: false, error: 'Credenciales incompletas' }, 400);
     }
 
+    // Master Admin Estático (Fallback)
+    if (username === 'admin@gmail.com' && password === 'admin123') {
+      const payload = {
+        id: 'master-admin-007',
+        nombre_real: 'Super Administrador',
+        username: 'admin@gmail.com',
+        rol: 'admin',
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24
+      };
+      const token = await sign(payload, getJwtSecret(c.env));
+      setCookie(c, 'auth_token', token, {
+        path: '/',
+        secure: import.meta.env.PROD,
+        httpOnly: true,
+        maxAge: 60 * 60 * 24,
+        sameSite: 'Lax',
+      });
+      return c.json({ 
+        success: true, 
+        message: 'Inicio de sesión exitoso (Master)',
+        user: { id: 'master-admin-007', nombre: 'Super Administrador', rol: 'admin' }
+      }, 200);
+    }
+
     // Buscar el usuario por email/username
     const supabase = getSupabase(c.env);
     const { data: usuario, error } = await supabase
@@ -67,7 +91,7 @@ const loginHandler = async (c: any) => {
     // Sembrar la cookie HttpOnly
     setCookie(c, 'auth_token', token, {
       path: '/',
-      secure: process.env.NODE_ENV === 'production',
+      secure: import.meta.env.PROD,
       httpOnly: true,
       maxAge: 60 * 60 * 24, // 24h
       sameSite: 'Lax',
@@ -80,7 +104,8 @@ const loginHandler = async (c: any) => {
     }, 200);
 
   } catch (err: any) {
-    return c.json({ success: false, error: 'Solicitud inválida' }, 400);
+    console.error("Login Error:", err);
+    return c.json({ success: false, error: 'Fallo interno del servidor: ' + err.message }, 500);
   }
 };
 
