@@ -332,18 +332,20 @@ const { title } = Astro.props;
 			</div>
 			
 			<div class="mt-auto">
-				<a class="nav-link mb-3" href="#" id="btnToggleChat" style="border: 1px solid var(--glass-border); border-radius: 12px; justify-content: center;">
-					<i class="bi bi-chat-dots"></i> Chat General
-				</a>
-
-				<div class="d-flex align-items-center gap-3 glass-card p-3 mb-2" style="border-radius: 12px; padding: 1rem !important;">
-					<div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-						<i class="bi bi-person text-white"></i>
+				<div class="d-flex align-items-center justify-content-between glass-card p-3 mb-2" style="border-radius: 12px; padding: 1rem !important;">
+					<div class="d-flex align-items-center gap-3 overflow-hidden">
+						<div class="rounded-circle bg-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+							<i class="bi bi-person text-white"></i>
+						</div>
+						<div class="overflow-hidden">
+							<h6 class="mb-0 fs-6 text-white text-truncate">{Astro.locals.user?.nombre_real || 'Usuario'}</h6>
+							<small class="text-muted text-uppercase" style="font-size: 0.7rem;">{Astro.locals.user?.rol || 'Rol Desconocido'}</small>
+						</div>
 					</div>
-					<div class="overflow-hidden">
-						<h6 class="mb-0 fs-6 text-white text-truncate">{Astro.locals.user?.nombre_real || 'Usuario'}</h6>
-						<small class="text-muted text-uppercase" style="font-size: 0.7rem;">{Astro.locals.user?.rol || 'Rol Desconocido'}</small>
-					</div>
+					<!-- Botón Chat Discreto -->
+					<a href="#" id="btnToggleChat" class="text-muted text-decoration-none" title="Chat General" style="opacity: 0.5; transition: opacity 0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">
+						<i class="bi bi-chat-dots fs-5"></i>
+					</a>
 				</div>
 				<button id="btnLogout" class="btn btn-outline-danger w-100 border-0 text-start ps-3"><i class="bi bi-box-arrow-left me-2"></i>Cerrar Sesión</button>
 			</div>
