@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 
 const ventasApp = new Hono();
 
@@ -17,22 +17,22 @@ const crearVenta = async (c: any) => {
     let final_id_cliente = null;
     if (cliente && cliente.nombre) {
       if (cliente.nit_ci) {
-        const { data: existingClient } = await supabase.from('clientes').select('id_cliente').eq('nit_ci', cliente.nit_ci).single();
+        const { data: existingClient } = await getSupabase(c.env).from('clientes').select('id_cliente').eq('nit_ci', cliente.nit_ci).single();
         if (existingClient) {
           final_id_cliente = existingClient.id_cliente;
         } else {
-          const { data: newClient } = await supabase.from('clientes').insert([{ nombre: cliente.nombre, nit_ci: cliente.nit_ci }]).select('id_cliente').single();
+          const { data: newClient } = await getSupabase(c.env).from('clientes').insert([{ nombre: cliente.nombre, nit_ci: cliente.nit_ci }]).select('id_cliente').single();
           if (newClient) final_id_cliente = newClient.id_cliente;
         }
       } else {
-        const { data: newClient } = await supabase.from('clientes').insert([{ nombre: cliente.nombre }]).select('id_cliente').single();
+        const { data: newClient } = await getSupabase(c.env).from('clientes').insert([{ nombre: cliente.nombre }]).select('id_cliente').single();
         if (newClient) final_id_cliente = newClient.id_cliente;
       }
     }
 
     // 1. Obtener los productos actuales de la DB
     const productIds = items.map((item: any) => item.id_producto);
-    const { data: dbProductos, error: prodError } = await supabase
+    const { data: dbProductos, error: prodError } = await getSupabase(c.env)
       .from('productos')
       .select('id_producto, nombre, stock_actual, precio_venta')
       .in('id_producto', productIds);
@@ -62,7 +62,7 @@ const crearVenta = async (c: any) => {
     }
 
     // 3. Insertar la cabecera de la Venta
-    const { data: ventaGenerada, error: ventaError } = await supabase
+    const { data: ventaGenerada, error: ventaError } = await getSupabase(c.env)
       .from('ventas')
       .insert([{ id_cliente: final_id_cliente, id_usuario: id_usuario || null, metodo_pago, total_venta: totalVenta }])
       .select('id_venta, total_venta, fecha_venta')
@@ -74,12 +74,12 @@ const crearVenta = async (c: any) => {
     const detallesConVenta = detallesParaInsertar.map(d => ({ ...d, id_venta: idVenta }));
 
     // 4. Insertar los Detalles de Venta
-    const { error: detallesError } = await supabase.from('detalle_ventas').insert(detallesConVenta);
+    const { error: detallesError } = await getSupabase(c.env).from('detalle_ventas').insert(detallesConVenta);
     if (detallesError) return c.json({ success: false, error: 'Venta creada pero ocurrió un error al registrar el detalle' }, 500);
 
     // 5. Descontar Stock
     for (const act of actualizacionesStock) {
-      await supabase.from('productos').update({ stock_actual: act.nuevo_stock }).eq('id_producto', act.id_producto);
+      await getSupabase(c.env).from('productos').update({ stock_actual: act.nuevo_stock }).eq('id_producto', act.id_producto);
     }
 
     return c.json({ success: true, message: 'Venta consolidada exitosamente', venta: ventaGenerada }, 201);

@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 
 const productosApp = new Hono();
 
 const obtenerProductos = async (c: any) => {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase(c.env)
     .from('productos')
     .select('*, categorias (nombre)');
 
@@ -27,7 +27,7 @@ productosApp.get('', obtenerProductos);
 
 const obtenerVencimientos = async (c: any) => {
   const hoy = new Date().toISOString().split('T')[0];
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase(c.env)
     .from('productos')
     .select('*')
     .gte('fecha_vencimiento', hoy)
@@ -52,7 +52,7 @@ const crearProducto = async (c: any) => {
       return c.json({ success: false, error: 'Faltan campos obligatorios para el producto' }, 400);
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase(c.env)
       .from('productos')
       .insert([{ codigo_barras, nombre, precio_compra, precio_venta, stock_actual, id_categoria, stock_minimo, fecha_vencimiento }])
       .select()
@@ -77,7 +77,7 @@ productosApp.put('/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
     
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase(c.env)
       .from('productos')
       .update(body)
       .eq('id_producto', id)
@@ -102,7 +102,7 @@ productosApp.put('/:id', async (c) => {
 productosApp.delete('/:id', async (c) => {
   const id = c.req.param('id');
   
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase(c.env)
     .from('productos')
     .delete()
     .eq('id_producto', id)

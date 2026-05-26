@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 
 const categoriasApp = new Hono();
 
 const obtenerCategorias = async (c: any) => {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase(c.env)
     .from('categorias')
     .select('*')
     .order('nombre', { ascending: true });
@@ -30,7 +30,7 @@ const crearCategoria = async (c: any) => {
       return c.json({ success: false, error: 'El nombre de la categoría es obligatorio' }, 400);
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase(c.env)
       .from('categorias')
       .insert([{ nombre, descripcion }])
       .select()
@@ -56,7 +56,7 @@ categoriasApp.put('/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
     
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase(c.env)
       .from('categorias')
       .update(body)
       .eq('id_categoria', id)
@@ -76,7 +76,7 @@ categoriasApp.put('/:id', async (c) => {
 categoriasApp.delete('/:id', async (c) => {
   const id = c.req.param('id');
   
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase(c.env)
     .from('categorias')
     .delete()
     .eq('id_categoria', id)

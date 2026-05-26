@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 
 const proveedoresApp = new Hono();
 
 const obtenerProveedores = async (c: any) => {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase(c.env)
     .from('proveedores')
     .select('*')
     .order('nombre_empresa', { ascending: true });
@@ -29,7 +29,7 @@ const crearProveedor = async (c: any) => {
       return c.json({ success: false, error: 'NIT/CI y Nombre de la Empresa son obligatorios' }, 400);
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase(c.env)
       .from('proveedores')
       .insert([{ nit_ci, nombre_empresa, nombre_contacto, telefono, email, direccion }])
       .select()
@@ -58,7 +58,7 @@ proveedoresApp.put('/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
     
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase(c.env)
       .from('proveedores')
       .update(body)
       .eq('id_proveedor', id)
@@ -78,7 +78,7 @@ proveedoresApp.put('/:id', async (c) => {
 proveedoresApp.delete('/:id', async (c) => {
   const id = c.req.param('id');
   
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase(c.env)
     .from('proveedores')
     .delete()
     .eq('id_proveedor', id)

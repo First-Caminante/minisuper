@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 import { sign, verify } from 'hono/jwt';
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
 
 const authApp = new Hono();
 
-// El secreto JWT debería venir del environment, usaremos un default robusto local
-const JWT_SECRET = 's3cr3t_m1n1sup3r_2026_k3y_v3ry_s4f3';
+// El secreto JWT se leerá dinámicamente
+const getJwtSecret = (env: any) => env?.JWT_SECRET || 's3cr3t_m1n1sup3r_2026_k3y_v3ry_s4f3';
 
 /**
  * Utilidad criptográfica robusta (Web Crypto API) para generar y verificar Hashes SHA-256 + Salt
@@ -36,6 +36,7 @@ const loginHandler = async (c: any) => {
     }
 
     // Buscar el usuario por email/username
+    const supabase = getSupabase(c.env);
     const { data: usuario, error } = await supabase
       .from('usuarios')
       .select('*')
@@ -61,7 +62,7 @@ const loginHandler = async (c: any) => {
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // Expira en 24h
     };
     
-    const token = await sign(payload, JWT_SECRET);
+    const token = await sign(payload, getJwtSecret(c.env));
 
     // Sembrar la cookie HttpOnly
     setCookie(c, 'auth_token', token, {
@@ -104,9 +105,10 @@ authApp.get('/usuarios', async (c) => {
   try {
     const token = getCookie(c, 'auth_token');
     if (!token) return c.json({ success: false, error: 'No autorizado' }, 401);
-    const decodedPayload = await verify(token, JWT_SECRET, "HS256");
+    const decodedPayload = await verify(token, getJwtSecret(c.env), "HS256");
     if (decodedPayload.rol !== 'admin') return c.json({ success: false, error: 'Prohibido' }, 403);
 
+    const supabase = getSupabase(c.env);
     const { data, error } = await supabase
       .from('usuarios')
       .select('id:id_usuario, nombre_real, username, rol, creado_en:ultimo_login')
@@ -130,7 +132,7 @@ const registerUserHandler = async (c: any) => {
 
     let decodedPayload: any;
     try {
-      decodedPayload = await verify(token, JWT_SECRET, "HS256");
+      decodedPayload = await verify(token, getJwtSecret(c.env), "HS256");
     } catch(e: any) {
       console.error("Error al verificar JWT:", e);
       return c.json({ success: false, error: 'Token inválido o expirado: ' + e.message }, 401);
@@ -158,6 +160,7 @@ const registerUserHandler = async (c: any) => {
     const password_hash = await hashPassword(password);
 
     // Insertar en Supabase
+    const supabase = getSupabase(c.env);
     const { data, error } = await supabase
       .from('usuarios')
       .insert([{ nombre_real, username, password_hash, rol }])
@@ -188,7 +191,7 @@ authApp.put('/usuarios/:id', async (c) => {
   try {
     const token = getCookie(c, 'auth_token');
     if (!token) return c.json({ success: false, error: 'No autorizado' }, 401);
-    const decodedPayload = await verify(token, JWT_SECRET, "HS256");
+    const decodedPayload = await verify(token, getJwtSecret(c.env), "HS256");
     if (decodedPayload.rol !== 'admin') return c.json({ success: false, error: 'Prohibido' }, 403);
 
     const id = c.req.param('id');
@@ -202,6 +205,7 @@ authApp.put('/usuarios/:id', async (c) => {
       updates.password_hash = await hashPassword(password);
     }
 
+    const supabase = getSupabase(c.env);
     const { data, error } = await supabase
       .from('usuarios')
       .update(updates)
@@ -223,7 +227,7 @@ authApp.delete('/usuarios/:id', async (c) => {
   try {
     const token = getCookie(c, 'auth_token');
     if (!token) return c.json({ success: false, error: 'No autorizado' }, 401);
-    const decodedPayload = await verify(token, JWT_SECRET, "HS256");
+    const decodedPayload = await verify(token, getJwtSecret(c.env), "HS256");
     if (decodedPayload.rol !== 'admin') return c.json({ success: false, error: 'Prohibido' }, 403);
 
     const id = c.req.param('id');
@@ -233,6 +237,7 @@ authApp.delete('/usuarios/:id', async (c) => {
       return c.json({ success: false, error: 'No puedes eliminar tu propia cuenta.' }, 400);
     }
 
+    const supabase = getSupabase(c.env);
     const { error } = await supabase.from('usuarios').delete().eq('id_usuario', id);
     if (error) throw error;
 

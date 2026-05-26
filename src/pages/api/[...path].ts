@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { getSupabase } from '../../lib/supabase';
 import categoriasApp from '../../routes/categorias';
 import productosApp from '../../routes/productos';
 import ventasApp from '../../routes/ventas';
@@ -19,11 +19,12 @@ app.get('/test', async (c) => {
 
 app.get('/db-test', async (c) => {
   // Validando la instancia de Supabase
+  const supabase = getSupabase(c.env);
   const { data, error } = await supabase.from('_dummy').select('*').limit(1).catch(() => ({ data: null, error: 'Table _dummy does not exist, but connection attempted' }));
   
   return c.json({
     message: 'Supabase instance is ready',
-    supabaseUrl: import.meta.env.SUPABASE_URL ? 'Loaded' : 'Missing',
+    supabaseUrl: (c.env?.PUBLIC_SUPABASE_URL || c.env?.SUPABASE_URL || import.meta.env.SUPABASE_URL) ? 'Loaded' : 'Missing',
     db_test: error ? 'Error expected if no tables exist' : 'Success',
   });
 });
@@ -35,4 +36,7 @@ app.route('/ventas', ventasApp);
 app.route('/proveedores', proveedoresApp);
 app.route('/auth', authApp);
 
-export const ALL: APIRoute = ({ request }) => app.fetch(request);
+export const ALL: APIRoute = (context) => {
+  const env = context.locals.runtime?.env || process.env;
+  return app.fetch(context.request, env);
+};
