@@ -6,6 +6,7 @@ import productosApp from '../../routes/productos';
 import ventasApp from '../../routes/ventas';
 import proveedoresApp from '../../routes/proveedores';
 import authApp from '../../routes/auth';
+import chatApp from '../../routes/chat';
 
 const app = new Hono().basePath('/api');
 
@@ -35,6 +36,7 @@ app.route('/productos', productosApp);
 app.route('/ventas', ventasApp);
 app.route('/proveedores', proveedoresApp);
 app.route('/auth', authApp);
+app.route('/chat', chatApp);
 
 export const ALL: APIRoute = (context) => {
   const env = context.locals.cloudflare?.env || process.env;
