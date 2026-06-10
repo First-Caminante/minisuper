@@ -9,7 +9,7 @@ reportesApp.get('/', async (c) => {
     const { desde, hasta } = c.req.query();
     
     // Parsear fechas a ISO string si existen, considerando UTC para la base de datos
-    let query = getSupabase(c.env).from('ventas').select('id_venta, total_venta, fecha_venta, metodo_pago, detalle_ventas(cantidad, subtotal, productos(nombre))');
+    let query = getSupabase(c.env).from('ventas').select('id_venta, total_venta, fecha_venta, metodo_pago, detalle_ventas(cantidad, subtotal, productos(nombre, categorias(nombre)))');
 
     if (desde) {
       // Ajuste básico a inicio del día (UTC aproximado para simplicidad, en un caso real se ajustaría al timezone local)
@@ -39,6 +39,7 @@ reportesApp.get('/', async (c) => {
 
     // Productos más vendidos (Top 5)
     const productosMap: Record<string, number> = {};
+    const categoriasMap: Record<string, number> = {};
 
     ventas?.forEach((v: any) => {
       totalRecaudado += v.total_venta;
@@ -54,7 +55,10 @@ reportesApp.get('/', async (c) => {
       if (v.detalle_ventas && Array.isArray(v.detalle_ventas)) {
         v.detalle_ventas.forEach((d: any) => {
           const nombre = d.productos?.nombre || 'Producto Desconocido';
+          const categoria = d.productos?.categorias?.nombre || 'Sin Categoría';
+          
           productosMap[nombre] = (productosMap[nombre] || 0) + d.cantidad;
+          categoriasMap[categoria] = (categoriasMap[categoria] || 0) + d.cantidad;
         });
       }
     });
@@ -65,6 +69,10 @@ reportesApp.get('/', async (c) => {
     const topProductos = Object.entries(productosMap)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
+      .map(([nombre, cantidad]) => ({ nombre, cantidad }));
+
+    const topCategorias = Object.entries(categoriasMap)
+      .sort((a, b) => b[1] - a[1])
       .map(([nombre, cantidad]) => ({ nombre, cantidad }));
 
     // Para la gráfica de líneas, ordenamos cronológicamente si es posible (ya lo da el locale string casi siempre en orden si parseamos)
@@ -93,7 +101,8 @@ reportesApp.get('/', async (c) => {
             fechas: tendenciaFechas,
             montos: tendenciaMontos
           },
-          top_productos: topProductos
+          top_productos: topProductos,
+          categorias: topCategorias
         }
       }
     });
