@@ -126,7 +126,7 @@ if (user?.rol !== 'admin') {
         </div>
       </div>
       <div class="col-lg-6">
-        <div class="glass-card p-4 h-100 custom-scroll" style="max-height: 390px; overflow-y: auto;">
+        <div class="glass-card p-4 h-100 custom-scroll print-no-scroll" style="max-height: 390px; overflow-y: auto;">
           <h5 class="text-white mb-4"><i class="bi bi-trophy text-success me-2"></i>Top Productos Más Vendidos</h5>
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 text-white">
@@ -160,6 +160,42 @@ if (user?.rol !== 'admin') {
     
     // Cargar reporte inicial (todo)
     cargarReporte();
+  });
+
+
+  // Optimización de colores para impresión (PDF)
+  window.addEventListener('beforeprint', () => {
+    Chart.defaults.color = '#000';
+    if(chartTendenciaObj) {
+      chartTendenciaObj.options.scales.x.ticks.color = '#000';
+      chartTendenciaObj.options.scales.y.ticks.color = '#000';
+      chartTendenciaObj.update();
+    }
+    if(chartPagosObj) {
+      chartPagosObj.options.plugins.legend.labels.color = '#000';
+      chartPagosObj.update();
+    }
+    if(chartCategoriasObj) {
+      chartCategoriasObj.options.scales.x.ticks.color = '#000';
+      chartCategoriasObj.update();
+    }
+  });
+
+  window.addEventListener('afterprint', () => {
+    Chart.defaults.color = '#a1a1aa';
+    if(chartTendenciaObj) {
+      chartTendenciaObj.options.scales.x.ticks.color = '#a1a1aa';
+      chartTendenciaObj.options.scales.y.ticks.color = '#a1a1aa';
+      chartTendenciaObj.update();
+    }
+    if(chartPagosObj) {
+      chartPagosObj.options.plugins.legend.labels.color = '#fff';
+      chartPagosObj.update();
+    }
+    if(chartCategoriasObj) {
+      chartCategoriasObj.options.scales.x.ticks.color = '#a1a1aa';
+      chartCategoriasObj.update();
+    }
   });
 
   function setRango(tipo) {
@@ -387,6 +423,44 @@ if (user?.rol !== 'admin') {
       color: black !important;
     }
     
+
+    .print-no-scroll {
+      max-height: none !important;
+      overflow: visible !important;
+    }
+    
+    .glass-card > div[style*="height: 300px"] {
+      height: 250px !important;
+    }
+    
+    .text-white, .text-muted, .text-info, .text-success, .text-warning {
+      color: black !important;
+    }
+    
+    /* Table borders and text for print */
+    .table, .table td, .table th {
+      color: black !important;
+      border-color: #dee2e6 !important;
+    }
+    
+    /* Enforce background colors for badges in print */
+    .badge {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* Prevent rows from splitting across pages */
+    .row {
+      page-break-inside: avoid !important;
+    }
+    
+    /* Adjust grid to prevent squishing charts */
+    .col-lg-8, .col-lg-4, .col-lg-6 {
+      width: 100% !important;
+      flex: 0 0 100% !important;
+      margin-bottom: 20px;
+    }
+
     /* Fix chart colors for print */
     canvas {
       max-width: 100% !important;
