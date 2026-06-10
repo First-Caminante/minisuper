@@ -55,7 +55,23 @@ import Layout from '../../layouts/Layout.astro';
             <span class="fs-2 fw-bold text-success" id="totalMonto">Bs. 0.00</span>
           </div>
           
-          
+          <button class="btn btn-primary-gradient w-100 py-3 fs-5 fw-bold shadow-lg" id="btnOpenCheckout" disabled data-bs-toggle="modal" data-bs-target="#checkoutModal">
+            <i class="bi bi-wallet2 me-2"></i>Cobrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Checkout -->
+  <div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title text-white" id="checkoutModalLabel">Completar Pago</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
           <div class="mb-4">
             <label class="form-label text-muted small text-uppercase fw-semibold mb-3 tracking-wide">Datos del Cliente</label>
             <div class="row g-2">
@@ -67,6 +83,7 @@ import Layout from '../../layouts/Layout.astro';
               </div>
             </div>
           </div>
+          
           <div class="mb-4">
             <label class="form-label text-muted small text-uppercase fw-semibold mb-3 tracking-wide">Método de Pago</label>
             <div class="d-flex gap-2">
@@ -78,12 +95,11 @@ import Layout from '../../layouts/Layout.astro';
 
               <input type="radio" class="btn-check" name="metodo_pago" id="pago_qr" value="qr">
               <label class="btn btn-outline-light flex-grow-1 py-2" for="pago_qr"><i class="bi bi-qr-code-scan me-1"></i> QR</label>
-            
             </div>
           </div>
           
           <!-- Formularios Dinámicos -->
-          <div id="dynamicPaymentForms" class="mb-4 p-3 bg-dark bg-opacity-25 border border-secondary rounded">
+          <div id="dynamicPaymentForms" class="p-3 bg-dark bg-opacity-25 border border-secondary rounded">
             <!-- Efectivo -->
             <div id="form-efectivo">
               <label class="form-label text-muted small text-uppercase fw-semibold mb-2">Monto Recibido (Bs.)</label>
@@ -129,14 +145,15 @@ import Layout from '../../layouts/Layout.astro';
               </div>
             </div>
           </div>
-
-          <button class="btn btn-primary-gradient w-100 py-3 fs-5 fw-bold shadow-lg" id="btnConsolidar" disabled>
-            <i class="bi bi-check2-circle me-2"></i>Consolidar Venta
-          </button>
+        </div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary-gradient" id="btnConfirmarVenta">Confirmar Venta</button>
         </div>
       </div>
     </div>
   </div>
+
 </Layout>
 
 <script src="/js/jspdf.umd.min.js" is:inline></script>
@@ -150,7 +167,8 @@ import Layout from '../../layouts/Layout.astro';
     const searchInput = document.getElementById('searchInput');
     const carritoItems = document.getElementById('carritoItems');
     const totalMonto = document.getElementById('totalMonto');
-    const btnConsolidar = document.getElementById('btnConsolidar');
+    const btnOpenCheckout = document.getElementById('btnOpenCheckout');
+    const btnConfirmarVenta = document.getElementById('btnConfirmarVenta');
     
     const cartCount = document.getElementById('cartCount');
 
@@ -371,7 +389,7 @@ ${itemsHtml}-----------------------------------------
             Añade productos para comenzar
           </div>`;
         totalMonto.textContent = 'Bs. 0.00';
-        btnConsolidar.disabled = true;
+        btnOpenCheckout.disabled = true;
         return;
       }
 
@@ -398,11 +416,11 @@ ${itemsHtml}-----------------------------------------
       }).join('');
 
       totalMonto.textContent = 'Bs. ' + total.toFixed(2);
-      btnConsolidar.disabled = false;
+      btnOpenCheckout.disabled = false;
     }
 
     // 6. Enviar Venta al Backend
-    btnConsolidar.addEventListener('click', async () => {
+    btnConfirmarVenta.addEventListener('click', async () => {
       try {
         const nombre = document.getElementById('input_nombre_cliente').value.trim();
         const nit_ci = document.getElementById('input_nit_cliente').value.trim();
@@ -421,9 +439,9 @@ ${itemsHtml}-----------------------------------------
           items: carrito.map(i => ({ id_producto: i.id_producto, cantidad: i.cantidad }))
         };
 
-        btnConsolidar.disabled = true;
-        const originalHtml = btnConsolidar.innerHTML;
-        btnConsolidar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
+        btnConfirmarVenta.disabled = true;
+        const originalHtml = btnConfirmarVenta.innerHTML;
+        btnConfirmarVenta.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
 
         try {
           const res = await fetch('/api/ventas', {
@@ -442,6 +460,7 @@ ${itemsHtml}-----------------------------------------
               alert("La venta se procesó pero hubo un error al generar el PDF: " + pdfErr.message);
             }
 
+            bootstrap.Modal.getInstance(document.getElementById('checkoutModal')).hide();
             mostrarTicketFiscal(data.venta, formValues, carrito, metodo_pago);
             document.getElementById('monto_recibido').value = '';
             document.getElementById('cambio_efectivo').textContent = 'Bs. 0.00';
