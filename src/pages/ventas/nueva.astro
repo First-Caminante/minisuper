@@ -198,9 +198,7 @@ import Layout from '../../layouts/Layout.astro';
 
 
     
-  function NumeroALetras(num) {
-    return num.toFixed(2) + " CON 00/100 BOLIVIANOS";
-  }
+
 
   function mostrarTicketFiscal(ventaDB, cliente, items, metodo_pago) {
     const total = items.reduce((acc, curr) => acc + (curr.precio_venta * curr.cantidad), 0);
@@ -485,8 +483,8 @@ ${itemsHtml}-----------------------------------------
             confirmButtonColor: '#4f46e5'
           });
         } finally {
-          if(carrito.length > 0) btnConsolidar.disabled = false;
-          btnConsolidar.innerHTML = '<i class="bi bi-check2-circle me-2"></i>Consolidar Venta';
+          if(carrito.length > 0) btnConfirmarVenta.disabled = false;
+          btnConfirmarVenta.innerHTML = '<i class="bi bi-check2-circle me-2"></i>Confirmar Venta';
         }
       } catch (errGlobal) {
         console.error("Error inesperado en click de consolidar:", errGlobal);
@@ -497,6 +495,10 @@ ${itemsHtml}-----------------------------------------
 
 
   });
+
+  function NumeroALetras(num) {
+    return num.toFixed(2) + " CON 00/100 BOLIVIANOS";
+  }
 
     // Función para generar PDF idéntico al ticket
     function generarFacturaPDF(cliente, items_vendidos, ventaDB, metodo_pago) {
