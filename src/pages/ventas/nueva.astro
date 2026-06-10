@@ -52,7 +52,7 @@ import Layout from '../../layouts/Layout.astro';
         <div class="p-4 bg-dark bg-opacity-50 border-top border-secondary">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <span class="text-muted text-uppercase small fw-bold tracking-wide">Total a Cobrar</span>
-            <span class="fs-2 fw-bold text-success" id="totalMonto">$0.00</span>
+            <span class="fs-2 fw-bold text-success" id="totalMonto">Bs. 0.00</span>
           </div>
           
           <div class="mb-4">
@@ -218,7 +218,7 @@ import Layout from '../../layouts/Layout.astro';
             <i class="bi bi-cart-x fs-1 d-block mb-3 opacity-50"></i>
             Añade productos para comenzar
           </div>`;
-        totalMonto.textContent = '$0.00';
+        totalMonto.textContent = 'Bs. 0.00';
         btnConsolidar.disabled = true;
         return;
       }
@@ -245,7 +245,7 @@ import Layout from '../../layouts/Layout.astro';
         `;
       }).join('');
 
-      totalMonto.textContent = '$' + total.toFixed(2);
+      totalMonto.textContent = 'Bs. ' + total.toFixed(2);
       btnConsolidar.disabled = false;
     }
 
