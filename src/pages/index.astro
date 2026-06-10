@@ -84,8 +84,8 @@ const evaluarVencimiento = (fechaStr: string) => {
 										<div class="fw-semibold text-white">{prod.nombre}</div>
 									</td>
 									<td><span class="badge bg-dark border border-secondary text-light">{prod.categoria_nombre || 'Sin Categoría'}</span></td>
-									<td>${Number(prod.precio_compra).toFixed(2)}</td>
-									<td>${Number(prod.precio_venta).toFixed(2)}</td>
+									<td>Bs. {Number(prod.precio_compra).toFixed(2)}</td>
+									<td>Bs. {Number(prod.precio_venta).toFixed(2)}</td>
 									<td>
 										<span class={`badge px-2 py-1 ${stockBadgeClass}`}>
 											{prod.stock_actual} / {prod.stock_minimo || 0}

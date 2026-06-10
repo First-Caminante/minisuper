@@ -161,7 +161,7 @@ import Layout from '../../layouts/Layout.astro';
               </div>
             </div>
             <div class="text-end">
-              <div class="fw-bold text-success mb-2 fs-5">$${Number(p.precio_venta).toFixed(2)}</div>
+              <div class="fw-bold text-success mb-2 fs-5">Bs. ${Number(p.precio_venta).toFixed(2)}</div>
               <button class="btn btn-sm px-3 ${agotado ? 'btn-secondary disabled' : 'btn-outline-primary'}" 
                 onclick="agregarAlCarrito(${p.id_producto}, '${p.nombre.replace(/'/g, "\\'")}', ${p.precio_venta}, ${p.stock_actual})"
                 ${agotado ? 'disabled' : ''}>
@@ -231,7 +231,7 @@ import Layout from '../../layouts/Layout.astro';
           <div class="d-flex justify-content-between align-items-center mb-3 bg-dark bg-opacity-50 p-3 rounded-4 border border-secondary shadow-sm transition-all">
             <div class="flex-grow-1 pe-3" style="min-width: 0;">
               <div class="fw-semibold text-white text-truncate mb-1" title="${item.nombre}">${item.nombre}</div>
-              <div class="text-success fw-bold">$${subtotal.toFixed(2)}</div>
+              <div class="text-success fw-bold">Bs. ${subtotal.toFixed(2)}</div>
             </div>
             
             <div class="d-flex align-items-center gap-3 bg-dark rounded-pill px-2 py-1 shadow-inner">
@@ -308,7 +308,7 @@ import Layout from '../../layouts/Layout.astro';
 
             await Swal.fire({
               title: '¡Venta Procesada!',
-              text: `Operación exitosa. Total cobrado: $${(carrito.reduce((acc, curr) => acc + (curr.precio_venta * curr.cantidad), 0)).toFixed(2)}. La factura se está descargando.`,
+              text: `Operación exitosa. Total cobrado: Bs. ${(carrito.reduce((acc, curr) => acc + (curr.precio_venta * curr.cantidad), 0)).toFixed(2)}. La factura se está descargando.`,
               icon: 'success',
               background: '#1e1f22',
               color: '#fff',
@@ -354,7 +354,7 @@ import Layout from '../../layouts/Layout.astro';
       const doc = new jsPDF();
       
       doc.setFontSize(22);
-      doc.text("MiniSuper - Factura Comercial", 105, 20, null, null, "center");
+      doc.text("MiniSuper KRN - Factura Comercial", 105, 20, null, null, "center");
       
       doc.setFontSize(12);
       doc.text(`Fecha: ${new Date().toLocaleString()}`, 20, 35);
@@ -382,17 +382,17 @@ import Layout from '../../layouts/Layout.astro';
         total += sub;
         doc.text(item.nombre.substring(0, 40), 20, y);
         doc.text(item.cantidad.toString(), 120, y);
-        doc.text(`$${item.precio_venta.toFixed(2)}`, 140, y);
-        doc.text(`$${sub.toFixed(2)}`, 170, y);
+        doc.text(`Bs. ${item.precio_venta.toFixed(2)}`, 140, y);
+        doc.text(`Bs. ${sub.toFixed(2)}`, 170, y);
         y += 8;
       });
       
       doc.line(20, y, 190, y);
       y += 10;
       doc.setFontSize(14);
-      doc.text(`Total: $${total.toFixed(2)}`, 170, y, null, null, "right");
+      doc.text(`Total: Bs. ${total.toFixed(2)}`, 170, y, null, null, "right");
       
-      doc.save(`Factura_MiniSuper_V${ventaDB.id_venta}.pdf`);
+      doc.save(`Factura_MiniSuper_KRN_V${ventaDB.id_venta}.pdf`);
     }
 </script>
 
