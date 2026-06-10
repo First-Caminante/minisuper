@@ -1,0 +1,305 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Extra safety (though middleware handles this)
+const user = Astro.locals.user;
+if (user?.rol !== 'admin') {
+  return Astro.redirect('/?error=forbidden');
+}
+---
+
+<Layout title="Reportes y Analítica - MiniSuper KRN">
+  <div class="d-flex justify-content-between align-items-center mb-4 hide-on-print">
+    <h2 class="text-white mb-0"><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>Reportes Estadísticos</h2>
+    <button class="btn btn-outline-light px-4" onclick="window.print()">
+      <i class="bi bi-printer me-2"></i>Exportar Reporte / Imprimir
+    </button>
+  </div>
+
+  <!-- Print Header (Only visible on print) -->
+  <div class="print-header text-center mb-4 text-dark" style="display: none;">
+    <h2 class="mb-1">MiniSuper KRN - Reporte Estadístico</h2>
+    <p class="mb-0 text-muted" id="printDateRange">Rango de fechas: Todo el histórico</p>
+    <hr class="border-dark my-3">
+  </div>
+
+  <!-- Filtros -->
+  <div class="glass-card mb-4 p-3 hide-on-print">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-5">
+        <label class="form-label text-muted small text-uppercase fw-semibold mb-2">Rango Rápido</label>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-light flex-grow-1" onclick="setRango('hoy')">Hoy</button>
+          <button class="btn btn-outline-light flex-grow-1" onclick="setRango('semana')">Esta Semana</button>
+          <button class="btn btn-outline-light flex-grow-1" onclick="setRango('mes')">Este Mes</button>
+        </div>
+      </div>
+      <div class="col-md-7">
+        <div class="row g-2">
+          <div class="col-sm-5">
+            <label class="form-label text-muted small text-uppercase fw-semibold mb-2">Desde</label>
+            <input type="date" class="form-control text-white bg-dark border-secondary" id="fecha_desde">
+          </div>
+          <div class="col-sm-5">
+            <label class="form-label text-muted small text-uppercase fw-semibold mb-2">Hasta</label>
+            <input type="date" class="form-control text-white bg-dark border-secondary" id="fecha_hasta">
+          </div>
+          <div class="col-sm-2">
+            <label class="form-label text-muted small text-uppercase fw-semibold mb-2 d-none d-sm-block">&nbsp;</label>
+            <button class="btn btn-primary-gradient w-100" onclick="cargarReporte()">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="loadingOverlay" class="text-center py-5 d-none hide-on-print">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="text-muted mt-3">Procesando datos...</p>
+  </div>
+
+  <div id="reporteContenido" style="opacity: 1; transition: opacity 0.3s;">
+    <!-- Tarjetas de KPIs -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-3">
+        <div class="glass-card p-4 h-100 border-start border-success border-4">
+          <h6 class="text-muted text-uppercase small fw-bold tracking-wide mb-2">Total Recaudado</h6>
+          <h2 class="text-success fw-bold mb-0 text-truncate" id="kpi_total">Bs. 0.00</h2>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="glass-card p-4 h-100 border-start border-info border-4">
+          <h6 class="text-muted text-uppercase small fw-bold tracking-wide mb-2">Transacciones</h6>
+          <h2 class="text-white fw-bold mb-0" id="kpi_transacciones">0</h2>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="glass-card p-4 h-100 border-start border-warning border-4">
+          <h6 class="text-muted text-uppercase small fw-bold tracking-wide mb-2">Ticket Promedio</h6>
+          <h2 class="text-white fw-bold mb-0 text-truncate" id="kpi_promedio">Bs. 0.00</h2>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="glass-card p-3 h-100 border-start border-primary border-4">
+          <h6 class="text-muted text-uppercase small fw-bold tracking-wide mb-2">Desglose (Bs)</h6>
+          <div class="d-flex flex-column gap-1 small text-white">
+            <div class="d-flex justify-content-between"><span>Efectivo:</span> <span id="kpi_efectivo" class="fw-bold">0.00</span></div>
+            <div class="d-flex justify-content-between"><span>Tarjeta:</span> <span id="kpi_tarjeta" class="fw-bold text-info">0.00</span></div>
+            <div class="d-flex justify-content-between"><span>QR:</span> <span id="kpi_qr" class="fw-bold text-warning">0.00</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficas -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-8">
+        <div class="glass-card p-4 h-100">
+          <h5 class="text-white mb-4">Tendencia de Ventas</h5>
+          <div style="height: 300px; position: relative;">
+            <canvas id="chartTendencia"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="glass-card p-4 h-100">
+          <h5 class="text-white mb-4">Métodos de Pago</h5>
+          <div style="height: 300px; position: relative;" class="d-flex justify-content-center">
+            <canvas id="chartPagos"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script is:inline>
+  let chartTendenciaObj = null;
+  let chartPagosObj = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Configurar Chart.js para que combine con el tema oscuro
+    Chart.defaults.color = '#a1a1aa';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+    
+    // Cargar reporte inicial (todo)
+    cargarReporte();
+  });
+
+  function setRango(tipo) {
+    const hoy = new Date();
+    const inputDesde = document.getElementById('fecha_desde');
+    const inputHasta = document.getElementById('fecha_hasta');
+    
+    // Configurar a UTC local (solo YYYY-MM-DD para el input type date)
+    const offset = hoy.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(Date.now() - offset)).toISOString().split('T')[0];
+    
+    if (tipo === 'hoy') {
+      inputDesde.value = localISOTime;
+      inputHasta.value = localISOTime;
+    } else if (tipo === 'semana') {
+      const inicioSemana = new Date(hoy.setDate(hoy.getDate() - hoy.getDay() + (hoy.getDay() == 0 ? -6 : 1))); // Lunes
+      inputDesde.value = (new Date(inicioSemana - offset)).toISOString().split('T')[0];
+      inputHasta.value = localISOTime;
+    } else if (tipo === 'mes') {
+      const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      inputDesde.value = (new Date(inicioMes - offset)).toISOString().split('T')[0];
+      inputHasta.value = localISOTime;
+    }
+    
+    cargarReporte();
+  }
+
+  async function cargarReporte() {
+    const desde = document.getElementById('fecha_desde').value;
+    const hasta = document.getElementById('fecha_hasta').value;
+    
+    const labelPrint = document.getElementById('printDateRange');
+    if (desde && hasta) labelPrint.textContent = `Desde: ${desde} | Hasta: ${hasta}`;
+    else if (desde) labelPrint.textContent = `A partir de: ${desde}`;
+    else if (hasta) labelPrint.textContent = `Hasta: ${hasta}`;
+    else labelPrint.textContent = `Rango histórico completo`;
+
+    document.getElementById('loadingOverlay').classList.remove('d-none');
+    document.getElementById('reporteContenido').style.opacity = '0.3';
+
+    try {
+      const params = new URLSearchParams();
+      if (desde) params.append('desde', desde);
+      if (hasta) params.append('hasta', hasta);
+
+      const res = await fetch(`/api/reportes?${params.toString()}`);
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        actualizarUI(result.data);
+      } else {
+        alert(result.error || 'Error al cargar reporte');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      document.getElementById('loadingOverlay').classList.add('d-none');
+      document.getElementById('reporteContenido').style.opacity = '1';
+    }
+  }
+
+  function actualizarUI(data) {
+    const kpis = data.kpis;
+    document.getElementById('kpi_total').textContent = `Bs. ${kpis.total_recaudado.toFixed(2)}`;
+    document.getElementById('kpi_transacciones').textContent = kpis.transacciones;
+    document.getElementById('kpi_promedio').textContent = `Bs. ${kpis.ticket_promedio.toFixed(2)}`;
+    
+    document.getElementById('kpi_efectivo').textContent = kpis.desglose_pago.efectivo?.toFixed(2) || '0.00';
+    document.getElementById('kpi_tarjeta').textContent = kpis.desglose_pago.tarjeta?.toFixed(2) || '0.00';
+    document.getElementById('kpi_qr').textContent = kpis.desglose_pago.qr?.toFixed(2) || '0.00';
+
+    // Gráfica de Tendencia
+    const ctxTendencia = document.getElementById('chartTendencia').getContext('2d');
+    if (chartTendenciaObj) chartTendenciaObj.destroy();
+    
+    // Gradiente bonito para el área
+    const gradient = ctxTendencia.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(79, 70, 229, 0.5)'); // --accent
+    gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+
+    chartTendenciaObj = new Chart(ctxTendencia, {
+      type: 'line',
+      data: {
+        labels: data.graficas.tendencia.fechas,
+        datasets: [{
+          label: 'Monto Recaudado (Bs.)',
+          data: data.graficas.tendencia.montos,
+          borderColor: '#4f46e5',
+          backgroundColor: gradient,
+          borderWidth: 2,
+          pointBackgroundColor: '#4f46e5',
+          pointBorderColor: '#fff',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // Gráfica Circular de Pagos
+    const ctxPagos = document.getElementById('chartPagos').getContext('2d');
+    if (chartPagosObj) chartPagosObj.destroy();
+    
+    chartPagosObj = new Chart(ctxPagos, {
+      type: 'doughnut',
+      data: {
+        labels: ['Efectivo', 'Tarjeta', 'QR'],
+        datasets: [{
+          data: [
+            kpis.desglose_pago.efectivo || 0,
+            kpis.desglose_pago.tarjeta || 0,
+            kpis.desglose_pago.qr || 0
+          ],
+          backgroundColor: ['#22c55e', '#0ea5e9', '#eab308'],
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '70%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#fff' } }
+        }
+      }
+    });
+  }
+</script>
+
+<style>
+  .tracking-wide {
+    letter-spacing: 0.05em;
+  }
+  
+  @media print {
+    /* Hide layout elements and navigation */
+    body { background: white !important; color: black !important; }
+    .sidebar { display: none !important; }
+    .chat-widget, #btnToggleChat { display: none !important; }
+    .hide-on-print { display: none !important; }
+    
+    /* Make content fill screen and turn white/black */
+    main { margin-left: 0 !important; padding: 0 !important; }
+    
+    .print-header { display: block !important; }
+    
+    /* Convert glass cards to simple bordered boxes for print */
+    .glass-card {
+      background: white !important;
+      border: 1px solid #dee2e6 !important;
+      box-shadow: none !important;
+      color: black !important;
+      page-break-inside: avoid;
+    }
+    
+    .glass-card h2, .glass-card h5, .glass-card h6 {
+      color: black !important;
+    }
+    
+    /* Fix chart colors for print */
+    canvas {
+      max-width: 100% !important;
+    }
+  }
+</style>
